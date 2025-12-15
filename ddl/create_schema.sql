@@ -12,8 +12,8 @@ CREATE TABLE Movie (
 -- Star table
 CREATE TABLE Star (
     id BIGINT NOT NULL AUTO_INCREMENT,
-    first_name VARCHAR(255),
-    last_name VARCHAR(255),
+    firstName VARCHAR(255),
+    lastName VARCHAR(255),
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
