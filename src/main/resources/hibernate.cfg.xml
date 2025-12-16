@@ -21,6 +21,8 @@
         <!-- Names the annotated entity classes -->
         <mapping class="org.dontpanic.hibernate.entity.Movie"/>
         <mapping class="org.dontpanic.hibernate.entity.Star"/>
+        <mapping class="org.dontpanic.hibernate.entity.Review"/>
+        <mapping class="org.dontpanic.hibernate.entity.Reviewer"/>
 
     </session-factory>
 </hibernate-configuration>
