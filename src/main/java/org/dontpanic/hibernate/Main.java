@@ -1,9 +1,8 @@
 package org.dontpanic.hibernate;
 
 import org.dontpanic.hibernate.entity.Movie;
-import org.hibernate.Session;
-import org.hibernate.Transaction;
-import org.hibernate.query.Query;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.TypedQuery;
 
 import java.util.List;
 import java.util.Scanner;
@@ -45,10 +44,11 @@ public class Main {
     }
 
     private static void listAllMovies() {
-        try (Session session = HibernateSessionFactory.getSessionFactory().openSession()) {
-            Query<Movie> query = session.createQuery("from Movie", Movie.class);
-            List<Movie> movies = query.list();
-            
+        EntityManager entityManager = JPAEntityManagerFactory.getEntityManagerFactory().createEntityManager();
+        try {
+            TypedQuery<Movie> query = entityManager.createQuery("SELECT m FROM Movie m", Movie.class);
+            List<Movie> movies = query.getResultList();
+
             if (movies.isEmpty()) {
                 System.out.println("No movies found.");
                 return;
@@ -57,15 +57,18 @@ public class Main {
             System.out.println("\nAll Movies:");
             movies.forEach(movie -> System.out.printf("ID: %d, Title: %s",
                     movie.getId(), movie.getTitle()));
+        } finally {
+            entityManager.close();
         }
     }
 
     private static void searchMoviesByTitle(String title) {
-        try (Session session = HibernateSessionFactory.getSessionFactory().openSession()) {
-            Query<Movie> query = session.createQuery(
-                    "from Movie where lower(title) like lower(:title)", Movie.class);
+        EntityManager entityManager = JPAEntityManagerFactory.getEntityManagerFactory().createEntityManager();
+        try {
+            TypedQuery<Movie> query = entityManager.createQuery(
+                    "SELECT m FROM Movie m WHERE LOWER(m.title) LIKE LOWER(:title)", Movie.class);
             query.setParameter("title", "%" + title + "%");
-            List<Movie> movies = query.list();
+            List<Movie> movies = query.getResultList();
 
             if (movies.isEmpty()) {
                 System.out.println("No movies found matching: " + title);
@@ -75,6 +78,8 @@ public class Main {
             System.out.println("\nMatching Movies:");
             movies.forEach(movie -> System.out.printf("ID: %d, Title: %s",
                     movie.getId(), movie.getTitle()));
+        } finally {
+            entityManager.close();
         }
     }
 
@@ -85,13 +90,19 @@ public class Main {
         Movie movie = new Movie();
         movie.setTitle(title);
 
-        try (Session session = HibernateSessionFactory.getSessionFactory().openSession()) {
-            Transaction transaction = session.beginTransaction();
-            session.persist(movie);
-            transaction.commit();
+        EntityManager entityManager = JPAEntityManagerFactory.getEntityManagerFactory().createEntityManager();
+        try {
+            entityManager.getTransaction().begin();
+            entityManager.persist(movie);
+            entityManager.getTransaction().commit();
             System.out.println("Movie added successfully!");
         } catch (Exception e) {
+            if (entityManager.getTransaction().isActive()) {
+                entityManager.getTransaction().rollback();
+            }
             System.out.println("Error adding movie: " + e.getMessage());
+        } finally {
+            entityManager.close();
         }
     }
 }
